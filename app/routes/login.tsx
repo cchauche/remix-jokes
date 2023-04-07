@@ -1,7 +1,5 @@
 import type { ActionArgs, LinksFunction } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
 import { Link, useActionData, useSearchParams } from "@remix-run/react";
-import bcrypt from "bcryptjs";
 
 import stylesUrl from "~/styles/login.css";
 import { db } from "~/utils/db.server";
@@ -18,6 +16,8 @@ export const action = async ({ request }: ActionArgs) => {
   const username = form.get("username");
   const password = form.get("password");
   const redirectTo = validateUrl(form.get("redirectTo") || "/jokes");
+
+  console.log({ loginType, username, password, redirectTo });
   if (
     typeof loginType !== "string" ||
     typeof username !== "string" ||
@@ -91,7 +91,6 @@ export const action = async ({ request }: ActionArgs) => {
 export default function Login() {
   const [searchParams] = useSearchParams();
   const actionData = useActionData<typeof action>();
-  const loginType = actionData?.fields?.loginType || "login";
 
   return (
     <div className="container">
@@ -211,7 +210,7 @@ function validatePassword(password: unknown) {
 
 function validateUrl(url: unknown) {
   if (typeof url === "string") {
-    const urls = ["/jokes", "/", "https://remix.run"];
+    const urls = ["/jokes", "/", "https://remix.run", "/jokes/new"];
     if (urls.includes(url)) {
       return url;
     }

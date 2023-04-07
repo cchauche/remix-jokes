@@ -43,3 +43,27 @@ export async function createUserSession(userId: string, redirectTo: string) {
     headers: { "Set-Cookie": await storage.commitSession(session) },
   });
 }
+
+function getUserSession(request: Request) {
+  return storage.getSession(request.headers.get("Cookie"));
+}
+
+export async function getUserId(request: Request) {
+  const session = await getUserSession(request);
+  const userId = (await session.get("userId")) as unknown;
+  if (!userId || typeof userId !== "string") return null;
+  return userId;
+}
+
+export async function requireUserId(
+  request: Request,
+  redirectTo: string = new URL(request.url).pathname
+) {
+  const userId = await getUserId(request);
+
+  if (!userId) {
+    const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
+    throw redirect(`/login?${searchParams}`);
+  }
+  return userId;
+}

@@ -1,26 +1,16 @@
-import type { ActionArgs } from "@remix-run/node";
+import { ActionArgs, LoaderArgs, json } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { useActionData } from "@remix-run/react";
+import { useActionData, useLoaderData } from "@remix-run/react";
 
 import { db } from "~/utils/db.server";
 import { badRequest } from "~/utils/request.server";
-
-function validateJokeContent(content: string) {
-  if (content.length < 10) {
-    return `That joke is too short`;
-  }
-}
-
-function validateJokeName(name: string) {
-  if (name.length < 3) {
-    return `That joke's name is too short`;
-  }
-}
+import { requireUserId } from "~/utils/session.server";
 
 export const action = async ({ request }: ActionArgs) => {
   const form = await request.formData();
   const name = form.get("name");
   const content = form.get("content");
+  const jokesterId = await requireUserId(request);
 
   if (typeof name !== "string" || typeof content !== "string") {
     return badRequest({
@@ -39,13 +29,12 @@ export const action = async ({ request }: ActionArgs) => {
     return badRequest({ fieldErrors, fields, formError: null });
   }
 
-  const joke = await db.joke.create({ data: fields });
+  const joke = await db.joke.create({ data: { jokesterId, ...fields } });
   return redirect(`/jokes/${joke.id}`);
 };
 
 export default function NewJokeRoute() {
   const actionData = useActionData<typeof action>();
-  console.log("data: ", actionData);
   return (
     <div>
       <p>Add your own hilarious joke</p>
@@ -99,4 +88,16 @@ export default function NewJokeRoute() {
       </form>
     </div>
   );
+}
+
+function validateJokeContent(content: string) {
+  if (content.length < 10) {
+    return `That joke is too short`;
+  }
+}
+
+function validateJokeName(name: string) {
+  if (name.length < 3) {
+    return `That joke's name is too short`;
+  }
 }
