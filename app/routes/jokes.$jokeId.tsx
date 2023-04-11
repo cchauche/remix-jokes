@@ -1,6 +1,12 @@
 import type { LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Link, useCatch, useLoaderData, useParams } from "@remix-run/react";
+import {
+  Link,
+  isRouteErrorResponse,
+  useLoaderData,
+  useParams,
+  useRouteError,
+} from "@remix-run/react";
 
 import { db } from "~/utils/db.server";
 
@@ -30,21 +36,19 @@ export default function JokeRoute() {
   );
 }
 
-export function CatchBoundary() {
-  const caught = useCatch();
-  const params = useParams();
-  if (caught.status === 404) {
-    return (
-      <div className="error-container">
-        Huh? What the heck is "{params.jokeId}"?
-      </div>
-    );
-  }
-  throw new Error(`Unhandled error: ${caught.status}`);
-}
-
-export function ErrorBoundary({ error }: { error: Error }) {
+export function ErrorBoundary() {
+  const error = useRouteError();
   const { jokeId } = useParams();
+
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 404) {
+      return (
+        <div className="error-container">Huh? What the heck is "{jokeId}"?</div>
+      );
+    }
+    throw new Error(`Unhandled error: ${error.status}`);
+  }
+
   return (
     <div className="error-container">
       There was an error loading joke by the id {jokeId}. Sorry.

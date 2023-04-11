@@ -1,7 +1,12 @@
 import type { ActionArgs, LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { Link, useActionData, useCatch, useLoaderData } from "@remix-run/react";
+import {
+  Link,
+  isRouteErrorResponse,
+  useActionData,
+  useRouteError,
+} from "@remix-run/react";
 
 import { db } from "~/utils/db.server";
 import { badRequest } from "~/utils/request.server";
@@ -99,20 +104,20 @@ export default function NewJokeRoute() {
   );
 }
 
-export function CatchBoundary() {
-  const caught = useCatch();
+export function ErrorBoundary() {
+  const error = useRouteError();
 
-  if (caught.status === 401) {
-    return (
-      <div className="error-container">
-        <p>You must be logged in to create a joke.</p>
-        <Link to="/login">Login</Link>
-      </div>
-    );
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 401) {
+      return (
+        <div className="error-container">
+          <p>You must be logged in to create a joke.</p>
+          <Link to="/login">Login</Link>
+        </div>
+      );
+    }
   }
-}
 
-export function ErrorBoundary({ error }: { error: Error }) {
   return (
     <div className="error-container">
       Something unexpected went wrong. Sorry about that

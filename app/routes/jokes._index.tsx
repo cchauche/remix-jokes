@@ -1,5 +1,10 @@
 import { json } from "@remix-run/node";
-import { Link, useCatch, useLoaderData } from "@remix-run/react";
+import {
+  Link,
+  isRouteErrorResponse,
+  useLoaderData,
+  useRouteError,
+} from "@remix-run/react";
 import { db } from "~/utils/db.server";
 
 export const loader = async () => {
@@ -31,17 +36,17 @@ export default function JokesIndexRoute() {
   );
 }
 
-export function CatchBoundary() {
-  const caught = useCatch();
+export function ErrorBoundary() {
+  const error = useRouteError();
 
-  if (caught.status === 404) {
-    return (
-      <div className="error-container">There are no jokes to display.</div>
-    );
+  if (isRouteErrorResponse(error)) {
+    if (error.status === 404) {
+      return (
+        <div className="error-container">There are no jokes to display.</div>
+      );
+    }
+    throw new Error(`Unexpected caught response with status: ${error.status}`);
   }
-  throw new Error(`Unexpected caught response with status: ${caught.status}`);
-}
 
-export function ErrorBoundary({ error }: { error: Error }) {
   return <div className="error-container">I did a whoopsies</div>;
 }

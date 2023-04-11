@@ -1,5 +1,11 @@
 import type { LinksFunction } from "@remix-run/node";
-import { Links, LiveReload, Outlet, useCatch } from "@remix-run/react";
+import {
+  Links,
+  LiveReload,
+  Outlet,
+  isRouteErrorResponse,
+  useRouteError,
+} from "@remix-run/react";
 import globalStylesUrl from "./styles/global.css";
 import globalMediumStylesUrl from "./styles/global-medium.css";
 import globalLargeStylesUrl from "./styles/global-large.css";
@@ -50,26 +56,31 @@ export default function App() {
   );
 }
 
-export function CatchBoundary() {
-  const caught = useCatch();
+export function ErrorBoundary() {
+  const error = useRouteError();
 
-  return (
-    <Document title={`${caught.status} ${caught.statusText}`}>
-      <div className="error-container">
-        <h1>
-          {caught.status} {caught.statusText}
-        </h1>
-      </div>
-    </Document>
-  );
-}
+  if (isRouteErrorResponse(error)) {
+    return (
+      <Document title={`${error.status} ${error.statusText}`}>
+        <div className="error-container">
+          <h1>
+            {error.status} {error.statusText}
+          </h1>
+        </div>
+      </Document>
+    );
+  }
 
-export function ErrorBoundary({ error }: { error: Error }) {
+  let errorMessage = "Unknown error";
+  if (error instanceof Error) {
+    errorMessage = error.message;
+  }
+
   return (
     <Document title="Uh-oh!">
       <div className="error-container">
         <h1>App Error</h1>
-        <pre>{error.message}</pre>
+        <pre>{errorMessage}</pre>
       </div>
     </Document>
   );
